@@ -11,8 +11,9 @@ from time import sleep
 
 APIKey = 'RGAPI-1614f160-c74e-4e2e-b188-b94b71ed41ce'
 summonerName = 'Taxane'
-gamesRecdFileName = 'gamesRecd.json'
+gamesRecdFileName = 'gamesRec.txt'
 recordsFileName = 'records.json'
+gameId = 3301832021
 
 
 def requestSummonerData(summonerName, APIKey):
@@ -69,42 +70,23 @@ def getMatchInfo(gameId):
 
 # print(getMatchInfo(3302754274))
 
-def checkRecords(records='records.txt', gamesRecorded='gamesRecorded.txt', gameIdToAdd=3302754274):
-    with open(os.path.join(sys.path[0], gamesRecorded), 'a+') as gr:
-        gr.seek(0)
-        gamesRecordedLoaded = gr.readlines()
-        if (str(gameIdToAdd) + '\n') not in gamesRecordedLoaded:
-            with open(records, 'a+') as f:
-                recordsLoaded = f.readlines()
-                infoToAdd = getMatchInfo(gameIdToAdd)
-                recordsLoaded.append(infoToAdd)
-                f.write(str(infoToAdd) + '\n')
-                gr.write(str(gameIdToAdd) + '\n')
-                print(str(gameIdToAdd) + ' has been recorded!')
-
-        elif (str(gameIdToAdd) + '\n') in gamesRecordedLoaded:
-            print('This game has already been recorded!')
-            pass
-        else:
-            print("'Sumtin ain't right fella")
-            pass
-
-
 def checkForGamesRecdFile(gamesRecd=gamesRecdFileName):
-    with open(os.path.join(sys.path[0], gamesRecd), 'r+') as grjson:
+    with open(os.path.join(sys.path[0], gamesRecd), 'a+') as grd:
+        grd.seek(0)
         try:
-            gamesRecdLoadedJson = json.load(grjson)
+            gamesRecdLoadedJson = grd.readlines()
             print('Found the file!')
             return (True)
         except:
             list1 = []
-            json.dump(list1, grjson)
+            grd.write(list1)
             print('Did not find file. No worries... Creating new one')
             return (False)
 
 
 def checkForRecordsFile(records=recordsFileName):
-    with open(os.path.join(sys.path[0], records), 'r+') as fRecords:
+    with open(os.path.join(sys.path[0], records), 'a+') as fRecords:
+        fRecords.seek(0)
         try:
             recordsJson = json.load(fRecords)
             print('Found the file!')
@@ -116,19 +98,33 @@ def checkForRecordsFile(records=recordsFileName):
             return (False)
 
 
-print(checkForRecordsFile())
+# print(checkForRecordsFile())
+# print(checkForGamesRecdFile())
+
+def checkRecords(records=recordsFileName, gamesRecd=gamesRecdFileName, gameIdToAdd=gameId):
+    goodToGo = False
+    recordedGame = False
+    if checkForGamesRecdFile() == True and checkForRecordsFile() == True:
+        goodToGo = True
+    with open(os.path.join(sys.path[0], gamesRecd), 'a+') as gral:
+        listOfRecGamesByID = gral.readlines()
+        if gameIdToAdd in listOfRecGamesByID:
+            recordedGame = True
+        elif gameIdToAdd not in listOfRecGamesByID:
+            recordedGame = False
+        else:
+            return(999)
+    if recordedGame is False:
+        with open(os.path.join(sys.path[0], records), 'r+') as recs:
+            allrecs = dict(json.load(recs))
+            gameMatchInfo = getMatchInfo(gameIdToAdd)
+            allrecs.update({gameIdToAdd : gameMatchInfo})
+            json.dump(allrecs, recs)
+            print(allrecs)
 
 
-# def checkRecords2(records=recordsFileName, gamesRecd=gamesRecdFileName, gameIdToAddJSON=3306242498):
-#     if gameIdToAddJSON not in gamesRecdLoadedJson:
-#         # print(recordsJson)l
-#         infoToAdd = getMatchInfo(gameIdToAddJSON)
-#         recordsJson.update({gameIdToAddJSON: infoToAdd})
-#         json.dump(recordsJson, fRecords)
-#     gamesRecdLoadedJson.append(gameIdToAddJSON)
-#
-#
-# checkRecords2()
+
+checkRecords()
 
 
 def recordMatchListData():
